@@ -6,7 +6,7 @@ import file_reader
 import  file_parser
 
 
-file_path = "TestFiles/client_product.txt" #"TestFiles/test_file.txt" #
+file_path =  "TestFiles/test_file.txt" #"TestFiles/client_product.txt"
 file_content = file_reader.read(file_path)
 content_matrix, client_product = file_parser.parse(file_content)
 clients = content_matrix[0]
@@ -53,6 +53,8 @@ for allow_level in allow_levels:
     print("L2")
     candidate_list = sorted(list(set(itertools.combinations(allowed_products[0], step))))
 
+    print('Kandydaci: ', candidate_list)
+    
     # Shopping list from clients that bought more or equal than associate rule level
     clients_shopping_list = [client_shopping[1] for client_shopping in clients_shopping_list
                              if len(client_shopping[1]) >= step]
@@ -87,6 +89,8 @@ for allow_level in allow_levels:
     candidate_list_occurrences = dict()
     for combination in candidate_list:
         candidate_list_occurrences[combination] = shopping_list_with_all_possible_combinations.count(list(combination))
+
+    print(candidate_list_occurrences)
 
     #print(max(candidate_list_occurrences.items(), key=itemgetter(1))[0])
     #print(candidate_list_occurrences[max(candidate_list_occurrences.items(), key=itemgetter(1))[0]])
