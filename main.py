@@ -67,14 +67,13 @@ for allow_level in allow_levels:
     start_time = time.time()
 
     allowed_products = list()
-    candidate_list_allowed = list()
-
+    end_time_list = list()
     # L1
     step = 1
 
     candidate_list_allowed = get_candidate_list_allowed(products, allow_level, 1)
     allowed_products.append(candidate_list_allowed)
-    end_time_L1 = time.time();
+    end_time_list.append(time.time())
 
     only_shopping_list_updated = update_shopping_list(only_shopping_list, allowed_products[0])
 
@@ -89,12 +88,14 @@ for allow_level in allow_levels:
         candidate_list_allowed = get_candidate_list_allowed(flatten_all_possible_Ls, allow_level)
 
         allowed_products.append(candidate_list_allowed)
+        end_time_list.append(time.time())
 
     with open("Output.txt", "a") as text_file:
-        text_file.write("Cut level: %s\nL1: %s\tTime: %s\nL2: %s\tTime: %s\nL3:%s\tTime: %s\nSummary time: %s\n"
-                        % (str(allow_level), len(allowed_products[0]), str(end_time_L1 - start_time),
-                           len(allowed_products[1]), str(end_time_L2 - end_time_L1), len(allowed_products[2]),
-                           str(end_time - end_time_L2), str(end_time - start_time)))
+        text_file.write("Cut level: %s\nL1: %s\tTime: %s\nL2: %s\tTime: %s\nL3: %s\tTime: %s\nSummary time: %s\n"
+                        % (str(allow_level), len(allowed_products[0]), str(end_time_list[0] - start_time),
+                           len(allowed_products[1]), str(end_time_list[1] - end_time_list[0]), len(allowed_products[2]),
+                           str(end_time_list[2] - end_time_list[1]), str(end_time_list[2] - start_time)))
+
     print('Write to file performed %d' % allow_level)
 
 print("All work done!")
