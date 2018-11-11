@@ -19,6 +19,19 @@ def update_shopping_list(only_shopping_list, allowed_products):
     return temp_list
 
 
+def perform_combinations(only_shopping_list_updated, step):
+    all_possible_sorted_combinations = list()
+    for item in only_shopping_list_updated:
+        all_possible_sorted_combinations.append(sorted(list(set(itertools.combinations(item, step)))))
+    return all_possible_sorted_combinations
+
+
+def get_candidate_list_allowed(flatten_list, allow_level, mode=0):
+    if mode == 1:
+        res = Counter(flatten_list)
+    else:
+        res = Counter(map(tuple, flatten_list))
+    return [key for key, value in res.items() if value >= allow_level]
 
 
 file_path = "TestFiles/client_product.txt"
@@ -48,58 +61,34 @@ allow_levels = [1, 2, 5, 10, 15, 20, 25, 30, 40, 50, 60, 70, 75, 80, 90, 100, 15
 
 open("Output.txt", "w").close()
 
+step = 0
+
 for allow_level in allow_levels:
     start_time = time.time()
 
-    step = 1
     allowed_products = list()
     candidate_list_allowed = list()
 
     # L1
-    for product in products_unique:
-        if products.count(product) >= allow_level:
-            candidate_list_allowed.append(product)
+    step = 1
 
+    candidate_list_allowed = get_candidate_list_allowed(products, allow_level, 1)
     allowed_products.append(candidate_list_allowed)
     end_time_L1 = time.time();
 
-    # L2
-    step = step + 1
+    only_shopping_list_updated = update_shopping_list(only_shopping_list, allowed_products[0])
 
-    only_shopping_list_updated = update_shopping_list(only_shopping_list, allowed_products[step - 2])
+    for l_level in range(2, 4):
+        step = step + 1
 
-    # Make combinations for each shopping list foreach client
-    all_possible_L2 = list()
-    for item in only_shopping_list_updated:
-        all_possible_L2.append(sorted(list(set(itertools.combinations(item, step)))))
+        # Make combinations for each shopping list foreach client
+        all_possible_Ls = perform_combinations(only_shopping_list_updated, step)
 
-    flatten_all_possible_L2 = flatten_list(all_possible_L2)
+        flatten_all_possible_Ls = flatten_list(all_possible_Ls)
 
-    # flatten_all_possible_L2_unique = [list(x) for x in set(tuple(x) for x in flatten_all_possible_L2)]
+        candidate_list_allowed = get_candidate_list_allowed(flatten_all_possible_Ls, allow_level)
 
-    candidate_list_allowed = []
-    res = Counter(map(tuple, flatten_all_possible_L2))
-    candidate_list_allowed = [key for key, value in res.items() if value >= allow_level]
-
-    allowed_products.append(candidate_list_allowed)
-    end_time_L2 = time.time();
-
-    # L3
-    step = step + 1
-
-    # Make combinations for each shopping list foreach client
-    all_possible_L3 = list()
-    for item in only_shopping_list_updated:
-        all_possible_L3.append(sorted(list(set(itertools.combinations(item, step)))))
-
-    flatten_all_possible_L3 = flatten_list(all_possible_L3)
-
-    candidate_list_allowed = []
-    res = Counter(map(tuple, flatten_all_possible_L3))
-    candidate_list_allowed = [key for key, value in res.items() if value >= allow_level]
-
-    allowed_products.append(candidate_list_allowed)
-    end_time = time.time()
+        allowed_products.append(candidate_list_allowed)
 
     with open("Output.txt", "a") as text_file:
         text_file.write("Cut level: %s\nL1: %s\tTime: %s\nL2: %s\tTime: %s\nL3:%s\tTime: %s\nSummary time: %s\n"
