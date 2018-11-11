@@ -100,4 +100,12 @@ for allow_level in allow_levels:
 
     allowed_products.append(candidate_list_allowed)
     end_time = time.time()
+
+    with open("Output.txt", "a") as text_file:
+        text_file.write("Cut level: %s\nL1: %s\tTime: %s\nL2: %s\tTime: %s\nL3:%s\tTime: %s\nSummary time: %s\n"
+                        % (str(allow_level), len(allowed_products[0]), str(end_time_L1 - start_time),
+                           len(allowed_products[1]), str(end_time_L2 - end_time_L1), len(allowed_products[2]),
+                           str(end_time - end_time_L2), str(end_time - start_time)))
+    print('Write to file performed %d' % allow_level)
+
 print("All work done!")
