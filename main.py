@@ -5,7 +5,7 @@ import time
 from collections import Counter
 
 import file_reader
-import  file_parser
+import file_parser
 
 
 def flatten_list(list_to_flat):
