@@ -57,7 +57,7 @@ only_shopping_list = [clients_shopping_list_item[1] for clients_shopping_list_it
 print('Clients: ', len(clients_unique))
 print('Products: ', len(products_unique))
 
-allow_levels = [1, 2, 5, 10, 15, 20, 25, 30, 40, 50, 60, 70, 75, 80, 90, 100, 150, 200, 250, 500]
+allow_levels = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 15, 20, 25, 30, 40, 50, 60, 70, 75, 80, 90, 100, 150, 200, 250, 500]
 
 open("Output.txt", "w").close()
 
