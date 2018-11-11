@@ -1,6 +1,7 @@
 import itertools
 from itertools import groupby
 from operator import itemgetter
+import time
 
 import file_reader
 import  file_parser
@@ -39,7 +40,7 @@ print('Products: ', len(products_unique))
 allow_levels = [50];
 
 for allow_level in allow_levels:
-    print('Cut level', allow_level)
+    start_time = time.time()
 
     step = 1
     allowed_products = list()
@@ -56,6 +57,7 @@ for allow_level in allow_levels:
     # Shopping list from clients that bought more or equal than associate rule level
     clients_shopping_list = [client_shopping[1] for client_shopping in clients_shopping_list
                              if len(client_shopping[1]) >= step]
+    end_time_L1 = time.time();
 
     # For those clients that bought more than rule level make combinations of shopping list of a customer
     # to ensure that .count(combination) will be able to count sub-lists of shopping-list
@@ -92,6 +94,7 @@ for allow_level in allow_levels:
     #print(candidate_list_occurrences[max(candidate_list_occurrences.items(), key=itemgetter(1))[0]])
     allowed_products.append([pair for pair, candidate_set_occurrence in candidate_list_occurrences.items()
                             if candidate_set_occurrence >= allow_level])
+    end_time_L2 = time.time();
 
     # L3
     print("L3")
@@ -147,3 +150,4 @@ for allow_level in allow_levels:
 print(allowed_products[0])
 print(allowed_products[1])
 print(allowed_products[2])
+    end_time = time.time()
