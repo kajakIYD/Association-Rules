@@ -6,6 +6,7 @@ from collections import Counter
 
 import file_reader
 import file_parser
+import plotting
 
 
 def flatten_list(list_to_flat):
@@ -97,5 +98,28 @@ for allow_level in allow_levels:
                            str(end_time_list[2] - end_time_list[1]), str(end_time_list[2] - start_time)))
 
     print('Write to file performed %d' % allow_level)
+
+allow_levels, L1_quant, L1_Times, L2_quant, L2_Times, L3_quant, L3_Times, L4_quant, L4_Times, summary_times = \
+    file_parser.parse_results(file_content)
+plotting.plot_x_y(allow_levels, L1_quant, "L1 quantity vs Allow levels", "Allow level", "L1_quantity",
+                  "L1Q_vs_Allow_Level.png")
+plotting.plot_x_y(allow_levels, L1_Times, "L1 times vs Allow levels", "Allow level", "L1_Time",
+                  "L1T_vs_Allow_Level.png")
+plotting.plot_x_y(allow_levels, L2_quant, "L2 quantity vs Allow levels", "Allow level", "L2_quantity",
+                  "L2Q_vs_Allow_Level.png")
+plotting.plot_x_y(allow_levels, L2_Times, "L2 times vs Allow levels", "Allow level", "L2_Time",
+                  "L2T_vs_Allow_Level.png")
+plotting.plot_x_y(allow_levels, L3_quant, "L3 quantity vs Allow levels", "Allow level", "L3_quantity",
+                  "L3Q_vs_Allow_Level.png")
+plotting.plot_x_y(allow_levels, L3_Times, "L3 times vs Allow levels", "Allow level", "L3_Time",
+                  "L3T_vs_Allow_Level.png")
+plotting.plot_x_y(allow_levels, L4_quant, "L4 quantity vs Allow levels", "Allow level", "L4_quantity",
+                  "L4Q_vs_Allow_Level.png")
+plotting.plot_x_y(allow_levels, L4_Times, "L4 times vs Allow levels", "Allow level", "L4_Time",
+                  "L4T_vs_Allow_Level.png")
+plotting.plot_x_y(allow_levels, L4_Times, "Summary times vs Allow levels", "Allow level", "Summary_Time",
+                  "Summary_time_vs_Allow_Level.png")
+
+
 
 print("All work done!")
