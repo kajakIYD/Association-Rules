@@ -83,7 +83,7 @@ for allow_level in allow_levels:
 
     only_shopping_list_updated = update_shopping_list(only_shopping_list, allowed_products[0])
 
-    for l_level in range(2, 4):
+    for l_level in range(2, 5):
         step = step + 1
 
         # Make combinations for each shopping list foreach client
