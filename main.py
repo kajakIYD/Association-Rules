@@ -58,9 +58,14 @@ only_shopping_list = [clients_shopping_list_item[1] for clients_shopping_list_it
 print('Clients: ', len(clients_unique))
 print('Products: ', len(products_unique))
 
-allow_levels = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 15, 20, 25, 30, 40, 50, 60, 70, 75, 80, 90, 100, 150, 200, 250, 500]
+allow_levels = list(range(1, 100)) + [75, 80, 90, 100, 150, 200, 250, 500]
 
-open("Output.txt", "w").close()
+text_file_name = "Output.txt"
+csv_file_name = "OutputCSV.csv"
+open(text_file_name, "w").close()
+with open(csv_file_name, "w") as csv_file:
+    csv_file.write("Cut level;L1_quantity;L1_Time;L2_quantity;L2_Time;L3_quantity;L3_Time;L4_quantity;L4_Time;"
+                   "Summary_Time\n")
 
 step = 0
 
@@ -91,11 +96,21 @@ for allow_level in allow_levels:
         allowed_products.append(candidate_list_allowed)
         end_time_list.append(time.time())
 
-    with open("Output.txt", "a") as text_file:
+    with open(text_file_name, "a") as text_file:
         text_file.write("Cut level: %s\nL1: %s\tTime: %s\nL2: %s\tTime: %s\nL3: %s\tTime: %s\nSummary time: %s\n"
                         % (str(allow_level), len(allowed_products[0]), str(end_time_list[0] - start_time),
                            len(allowed_products[1]), str(end_time_list[1] - end_time_list[0]), len(allowed_products[2]),
                            str(end_time_list[2] - end_time_list[1]), str(end_time_list[2] - start_time)))
+
+    with open(csv_file_name, "a") as csv_file:
+        csv_file.write("%s;%s;%s;%s;%s;%s;%s;%s;%s;%s\n" % (str(allow_level), len(allowed_products[0]),
+                                                       str(end_time_list[0] - start_time), len(allowed_products[1]),
+                                                       str(end_time_list[1] - end_time_list[0]),
+                                                       len(allowed_products[2]),
+                                                       str(end_time_list[2] - end_time_list[1]),
+                                                       len(allowed_products[3]),
+                                                       str(end_time_list[3] - end_time_list[2]),
+                                                       str(end_time_list[3] - start_time)))
 
     print('Write to file performed %d' % allow_level)
 
