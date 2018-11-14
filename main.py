@@ -1,12 +1,41 @@
 import itertools
 from itertools import groupby
 from operator import itemgetter
+import time
+from collections import Counter
 
 import file_reader
-import  file_parser
+import file_parser
+import plotting
 
 
-file_path = "TestFiles/client_product.txt" #"TestFiles/test_file.txt" #
+def flatten_list(list_to_flat):
+    return [list(y) for x in list_to_flat
+            for y in x]
+
+
+def update_shopping_list(only_shopping_list, allowed_products):
+    # Cut from shopping list for each client that items that are not allowed
+    temp_list = [list(filter(lambda x: x in allowed_products, sublist)) for sublist in only_shopping_list]
+    return temp_list
+
+
+def perform_combinations(only_shopping_list_updated, step):
+    all_possible_sorted_combinations = list()
+    for item in only_shopping_list_updated:
+        all_possible_sorted_combinations.append(sorted(list(set(itertools.combinations(item, step)))))
+    return all_possible_sorted_combinations
+
+
+def get_candidate_list_allowed(flatten_list, allow_level, mode=0):
+    if mode == 1:
+        res = Counter(flatten_list)
+    else:
+        res = Counter(map(tuple, flatten_list))
+    return [key for key, value in res.items() if value >= allow_level]
+
+
+file_path = "TestFiles/client_product.txt"
 file_content = file_reader.read(file_path)
 content_matrix, client_product = file_parser.parse(file_content)
 clients = content_matrix[0]
@@ -24,126 +53,88 @@ client_product.sort(key=itemgetter(0))
 groups = groupby(client_product, itemgetter(0))
 
 clients_shopping_list = [[key, sorted([item[1] for item in data])] for (key, data) in groups]
-
-
-client_product.sort(key=itemgetter(1))
-groups = groupby(client_product, itemgetter(1))
-products_with_clients_that_bought_it = [[key, [item[0] for item in data]] for (key, data) in groups]
-
-print(products_occurrences)
-
+only_shopping_list = [clients_shopping_list_item[1] for clients_shopping_list_item in clients_shopping_list]
 
 print('Clients: ', len(clients_unique))
 print('Products: ', len(products_unique))
 
-allow_levels = [50];
+allow_levels = list(range(1, 100)) + [75, 80, 90, 100, 150, 200, 250, 500]
+
+text_file_name = "Output.txt"
+csv_file_name = "OutputCSV.csv"
+open(text_file_name, "w").close()
+with open(csv_file_name, "w") as csv_file:
+    csv_file.write("Cut level;L1_quantity;L1_Time;L2_quantity;L2_Time;L3_quantity;L3_Time;L4_quantity;L4_Time;"
+                   "Summary_Time\n")
+
+step = 0
 
 for allow_level in allow_levels:
-    print('Cut level', allow_level)
+    start_time = time.time()
 
-    step = 1
     allowed_products = list()
+    end_time_list = list()
     # L1
-    print("L1")
-    allowed_products.append(sorted([product for product, product_occurrence in products_occurrences.items()
-                             if product_occurrence >= allow_level]))
+    step = 1
 
-    step = step + 1
-    # L2
-    print("L2")
-    candidate_list = sorted(list(set(itertools.combinations(allowed_products[0], step))))
+    candidate_list_allowed = get_candidate_list_allowed(products, allow_level, 1)
+    allowed_products.append(candidate_list_allowed)
+    end_time_list.append(time.time())
 
-    # Shopping list from clients that bought more or equal than associate rule level
-    clients_shopping_list = [client_shopping[1] for client_shopping in clients_shopping_list
-                             if len(client_shopping[1]) >= step]
+    only_shopping_list_updated = update_shopping_list(only_shopping_list, allowed_products[0])
 
-    # For those clients that bought more than rule level make combinations of shopping list of a customer
-    # to ensure that .count(combination) will be able to count sub-lists of shopping-list
-    print("Combination1")
-    list_to_make_combinations_of = [client_shopping for client_shopping in clients_shopping_list
-                                    if len(client_shopping) > step]
+    for l_level in range(2, 5):
+        step = step + 1
 
-    shopping_list_with_all_possible_combinations = list()
-    for shopping_list in list_to_make_combinations_of:
-        shopping_list_with_all_possible_combinations.append(sorted(list(set(itertools.combinations(shopping_list,
-                                                                                                   step)))))
-    list_not_to_make_combinations_of = [client_shopping for client_shopping in clients_shopping_list
-                                        if len(client_shopping) == step]
-    print("Combination2")
-    if len(list_not_to_make_combinations_of) == 1:
-        shopping_list_with_all_possible_combinations = [list(y) for x in shopping_list_with_all_possible_combinations
-                                                        for y in x]
-        shopping_list_with_all_possible_combinations = shopping_list_with_all_possible_combinations + \
-                                                       list_not_to_make_combinations_of
-    else:
-        shopping_list_with_all_possible_combinations = shopping_list_with_all_possible_combinations + \
-                                                       list_not_to_make_combinations_of
-        shopping_list_with_all_possible_combinations = [item for item in shopping_list_with_all_possible_combinations
-                                                    if len(item) == step]
+        # Make combinations for each shopping list foreach client
+        all_possible_Ls = perform_combinations(only_shopping_list_updated, step)
 
-    shopping_list_with_all_possible_combinations = sorted(list(shopping_list_with_all_possible_combinations))
+        flatten_all_possible_Ls = flatten_list(all_possible_Ls)
 
-    print("CombinationFinal")
-    candidate_list_occurrences = dict()
-    for combination in candidate_list:
-        candidate_list_occurrences[combination] = shopping_list_with_all_possible_combinations.count(list(combination))
+        candidate_list_allowed = get_candidate_list_allowed(flatten_all_possible_Ls, allow_level)
 
-    #print(max(candidate_list_occurrences.items(), key=itemgetter(1))[0])
-    #print(candidate_list_occurrences[max(candidate_list_occurrences.items(), key=itemgetter(1))[0]])
-    allowed_products.append([pair for pair, candidate_set_occurrence in candidate_list_occurrences.items()
-                            if candidate_set_occurrence >= allow_level])
+        allowed_products.append(candidate_list_allowed)
+        end_time_list.append(time.time())
 
-    # L3
-    print("L3")
-    # Pick all allowed L2's and at third place add another value (that is present in all L2's values,
-    # but is not duplicate)
-    candidate_list_L3 = allowed_products[1]
-    all_values_in_L2 = set([y for x in candidate_list_L3 for y in x])
-    combination_for_L3 = []
-    for item in candidate_list_L3:
-        for sub_combination in all_values_in_L2:
-            if sub_combination not in item:
-                sub_item = [element for element in item]
-                sub_item = sub_item + list(sub_combination)
-                combination_for_L3.append(sorted(sub_item))
-    combination_for_L3 = sorted(set(map(tuple, sorted(combination_for_L3))))
+    with open(text_file_name, "a") as text_file:
+        text_file.write("Cut level: %s\nL1: %s\tTime: %s\nL2: %s\tTime: %s\nL3: %s\tTime: %s\nSummary time: %s\n"
+                        % (str(allow_level), len(allowed_products[0]), str(end_time_list[0] - start_time),
+                           len(allowed_products[1]), str(end_time_list[1] - end_time_list[0]), len(allowed_products[2]),
+                           str(end_time_list[2] - end_time_list[1]), str(end_time_list[2] - start_time)))
 
-    # Check if elements of candidate list appear more than allow_level in clients shopping list
-    step = step + 1
+    with open(csv_file_name, "a") as csv_file:
+        csv_file.write("%s;%s;%s;%s;%s;%s;%s;%s;%s;%s\n" % (str(allow_level), len(allowed_products[0]),
+                                                       str(end_time_list[0] - start_time), len(allowed_products[1]),
+                                                       str(end_time_list[1] - end_time_list[0]),
+                                                       len(allowed_products[2]),
+                                                       str(end_time_list[2] - end_time_list[1]),
+                                                       len(allowed_products[3]),
+                                                       str(end_time_list[3] - end_time_list[2]),
+                                                       str(end_time_list[3] - start_time)))
 
-    list_to_make_combinations_of = [client_shopping for client_shopping in clients_shopping_list
-                                    if len(client_shopping) > step]
+    print('Write to file performed %d' % allow_level)
 
-    shopping_list_with_all_possible_combinations = []
-    for shopping_list in list_to_make_combinations_of:
-        shopping_list_with_all_possible_combinations.append(sorted(list(set(itertools.combinations(shopping_list,
-                                                                                                   step)))))
-    shopping_list_with_all_possible_combinations = sorted(shopping_list_with_all_possible_combinations)
-    list_not_to_make_combinations_of = [client_shopping for client_shopping in clients_shopping_list
-                                        if len(client_shopping) == step]
+allow_levels, L1_quant, L1_Times, L2_quant, L2_Times, L3_quant, L3_Times, L4_quant, L4_Times, summary_times = \
+    file_parser.parse_results(file_content)
+plotting.plot_x_y(allow_levels, L1_quant, "L1 quantity vs Allow levels", "Allow level", "L1_quantity",
+                  "L1Q_vs_Allow_Level.png")
+plotting.plot_x_y(allow_levels, L1_Times, "L1 times vs Allow levels", "Allow level", "L1_Time",
+                  "L1T_vs_Allow_Level.png")
+plotting.plot_x_y(allow_levels, L2_quant, "L2 quantity vs Allow levels", "Allow level", "L2_quantity",
+                  "L2Q_vs_Allow_Level.png")
+plotting.plot_x_y(allow_levels, L2_Times, "L2 times vs Allow levels", "Allow level", "L2_Time",
+                  "L2T_vs_Allow_Level.png")
+plotting.plot_x_y(allow_levels, L3_quant, "L3 quantity vs Allow levels", "Allow level", "L3_quantity",
+                  "L3Q_vs_Allow_Level.png")
+plotting.plot_x_y(allow_levels, L3_Times, "L3 times vs Allow levels", "Allow level", "L3_Time",
+                  "L3T_vs_Allow_Level.png")
+plotting.plot_x_y(allow_levels, L4_quant, "L4 quantity vs Allow levels", "Allow level", "L4_quantity",
+                  "L4Q_vs_Allow_Level.png")
+plotting.plot_x_y(allow_levels, L4_Times, "L4 times vs Allow levels", "Allow level", "L4_Time",
+                  "L4T_vs_Allow_Level.png")
+plotting.plot_x_y(allow_levels, L4_Times, "Summary times vs Allow levels", "Allow level", "Summary_Time",
+                  "Summary_time_vs_Allow_Level.png")
 
-    if len(list_not_to_make_combinations_of) == 1:
-        shopping_list_with_all_possible_combinations = [list(y) for x in shopping_list_with_all_possible_combinations
-                                                        for y in x]
-        shopping_list_with_all_possible_combinations = shopping_list_with_all_possible_combinations + \
-                                                       list_not_to_make_combinations_of
-    else:
-        list_not_to_make_combinations_of = [tuple(item) for item in list_not_to_make_combinations_of]
-        shopping_list_with_all_possible_combinations = [y for x in shopping_list_with_all_possible_combinations
-                                                        for y in x]
-        shopping_list_with_all_possible_combinations = shopping_list_with_all_possible_combinations + \
-                                                       list_not_to_make_combinations_of
-        shopping_list_with_all_possible_combinations = [item for item in shopping_list_with_all_possible_combinations
-                                                        if len(item) == step]
 
-        shopping_list_with_all_possible_combinations = sorted(list(shopping_list_with_all_possible_combinations))
-        candidate_list_occurrences = dict()
-        for combination in combination_for_L3:
-            candidate_list_occurrences[combination] = shopping_list_with_all_possible_combinations.count(
-                                                        combination)
-        allowed_products.append([three for three, candidate_set_occurrence in candidate_list_occurrences.items()
-                            if candidate_set_occurrence >= allow_level])
 
-print(allowed_products[0])
-print(allowed_products[1])
-print(allowed_products[2])
+print("All work done!")

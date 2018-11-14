@@ -7,7 +7,7 @@ def read(file_path):
         if my_file.is_file():
             print('Good, file exists')
         else:
-            print('Bad, thewre is not such a file')
+            print('Bad, there is not such a file')
         with open(file_path, "r") as f:
             return f.read()
     except IOError:
